@@ -1,0 +1,5 @@
+Order_ID,Name,Customer_Address,Customer_Number,Courier,Status,Order
+T1,Peter Rabbit,12 The Burrow,0123456,T.B.C.,Preparing,Pepperoni Pizza
+T2,George Foreman,18 The Grill,345678,T.B.C.,Preparing,Sorbet
+T3,Harry Potter,4 Privet Drive,123845,Simon,Preparing,Nachos
+T4,James Peters,123 Anywhere,01234567,Paula,Preparing,Coke Nachos
