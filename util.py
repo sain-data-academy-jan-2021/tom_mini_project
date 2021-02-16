@@ -1,21 +1,16 @@
 import os 
+import sys
 import csv
 import pandas
-import sys
 
 courier_list = []
 product_list = []
 
-
-    
-def price_list(dict):
-    for x, y in dict.items():
-        print(x,' £',y)
-        
 def clear_terminal():
     os.system('clear')
 
-def header(title):
+def header(sub_title):
+    
     clear_terminal()
     # Variable to import for main menu graphical setup
     title = '+ Welcome to Tominoes Pizza Cafe +'
@@ -24,40 +19,58 @@ def header(title):
     print('|',(title),'|')
     print('|',('-'*len(title)),'|')    
     print()
-    print('-'*len(title))
-    print(title)    
-    print('-'*len(title))
+    print('-'*len(sub_title))
+    print(sub_title)    
+    print('-'*len(sub_title))
     print()
 
-
-        
-
-
 def open_a_csv_file(filename,list):
+    
     with open(filename) as file:
         csv_file = csv.DictReader(file) 
         for row in csv_file:
             list.append(row)
-            
+
 def save_to_a_csv(filename,list):
-    csv_columns = ["ID","Key","Value"]
+    
+    csv_columns = list[0].keys()
+    
     with open(filename, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
             for data in list:
                 writer.writerow(data)
-                
-                
 
+def save_product_to_a_csv(filename,list):
     
-#create_function("Courier", "couriers.copy.csv", courier_list, "Phone Number")
-#create_function("Product", "products.copy.csv", product_list, "Price")
+    csv_columns = list[0].keys()
+    
+    with open(filename, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            for data in list:
+                writer.writerow(data)
 
-#delete_function("Courier", "couriers.copy.csv", courier_list) 
-#delete_function("Product", "products.copy.csv", product_list) 
+def order_to_a_csv(filename,list):
+    
+    csv_columns = ["ID","Name","Customer_Address","Customer_Number","Courier","Status","Order"]
+    
+    with open(filename, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            for data in list:
+                writer.writerow(data)                
 
-#replace_function("Courier", "couriers.copy.csv", courier_list, "Phone Number")
-#replace_function("Product", "products.copy.csv", product_list, "Price")
+def list_index(list):
+    
+    index_list = []
+    for item in list:
+        index_list.append(item['ID'])
+        
+    return index_list
 
-#update_function("Courier", "couriers.copy.csv", courier_list, "Phone Number")
-#update_function("Product", "products.copy.csv", product_list, "Price")
+def last_id(table):
+    first_key = list(table[0].keys())[0]
+    last_id = int((table[-1][first_key]))
+    last_id += 1
+    return str(last_id)
