@@ -1,369 +1,506 @@
-# v.0.09
+# v.0.19
 import sys
 import util
-import data_pers
-import csv
-import pandas
+import pymysql
+import tabulate
 
-courier_list = []
-product_list = []
-orders = []
+connection = pymysql.connect("localhost", "root", "password", "miniproject")
 
+def ReadFromDatabase(table):
+    result = []
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT * FROM {table}")
+    rows = cursor.fetchall()
+    field_names = [i[0] for i in cursor.description]
+    for row in rows:
+        outerdict = {}
+        j = 0
+        for x in row:
+            outerdict[field_names[j]] = x
+            j += 1
+        result.append(outerdict)
+    cursor.close()
+    return result
+
+temp_list = []
+products_list = ReadFromDatabase('products')
+couriers_list = ReadFromDatabase('couriers')
+orders_list = ReadFromDatabase('orders')
+
+def update_courier_number_in_db_with_input_error_handling(what, val, table):
+    cursor = connection.cursor()
+    cursor.execute('SELECT courier_id FROM couriers')
+    fieldnames = [i[0] for i in cursor.description]
+    
+    print(fieldnames)
+    # print_from_db_menu(table)
+    # courier_to_change = input('Please enter the ID for the courier whose number you want to update...')    
+    # rows = cursor.fetchall()
+    # for row in rows:
+    #     temp_list.append(row)
+    # print(temp_list)
+    # if int(courier_to_change) in temp_list:
+    #     print(" in LIST")
+    # elif int(courier_to_change) not in temp_list:
+    #     print(" not in")
+    # else: 
+    #     print("Neither IN or OUT")
+    
+    # if courier_to_change in temp_list:
+    #     new_number = input(f'Please enter the new phone number...')
+    #     cursor.close()
+    #     cursor = connection.cursor()
+    #     cursor.execute(f'UPDATE {table} SET courier_number = "{new_number}" WHERE courier_id = {courier_to_change}')
+    # else:
+    #     while True:
+    #         try_again = input("You have chosen a Courier ID that is not in the list, would you like to try again? \nY/N?")
+    #         if try_again.upper() == "Y" or try_again.upper() == "YES":
+    #             update_courier_number_in_db_with_input_error_handling(what, val, table)
+    #         elif try_again.upper() == "N" or try_again.upper() == "NO":
+    #             menu("Courier", "number", "couriers")
+    #         else:
+    #             print("You have not choosen a suitable option, please try again...")
+    #             continue
+    temp_list.clear()
+    cursor.close()
+    connection.commit() 
+    
+# update_courier_number_in_db_with_input_error_handling("Courier", "Number", "couriers")
 
 def start_app():
-    while True:
-        util.header("Main Screen")
-        contents = input(
-            """
-        A: Product Menu... 
-        B: Courier Screen...
-        C: Order Menu
-        D: Exit App...
-
-        Please enter your choice:
+    contents = input(
         """
-        )
-        if contents.upper() == "A":
-            menu("Products", product_list, "products.csv", "Price")
-        elif contents.upper() == "B":
-            menu("Couriers", courier_list, "couriers.csv", "Number")
-        elif contents.upper() == "C":
-            order_menu()
-        elif contents.upper() == "D":
-            print("You are now exiting Tominoes, have a nice day!")
-            sys.exit()
-        else:
-            util.header("Main Screen")
-            print("You must make a selection from A - D")
-            print("Please try another selection")
-            continue
-
-
-def menu(what, list, filename, value):
+    1: Product Menu... 
+    2: Courier Screen...
+    3: Order Menu....
+    0: Exit App...
     
-    while True:
-        util.header(what)
-        start_option = input(
-            f"""Please select from the following options:
-
-        0)   Return to Main Menu
-        1)   Print Out {what} List
-        2)   Create {what}
-        3)   Update {what}
-        4)   Replace {what}
-        5)   Delete {what}
-        6)   Exit App
-                """
-        )
-
-        if start_option == "0":
-            start_app()
-        elif start_option == "1":
-            print_csv_function(what, list, filename, value)
-        elif start_option == "2":
-            create_function(what, list, filename, value)
-        elif start_option == "3":
-            update_function(what, list, filename, value)
-        elif start_option == "4":
-            replace_function(what, list, filename, value)
-        elif start_option == "5":
-            delete_function(what, list, filename, value)
-        elif start_option == "6":
-            util.header("Cheerio!")
-            print("You are now exiting Tominoes, have a nice day!")
-            sys.exit()
-        else:
-            util.clear_terminal()
-            print("You have not choosen the correctly. \nPlease try again.")
-            continue
-
-def create_function(what, list, filename, value):
-    util.open_a_csv_file(filename,list)
-    id = input(f"Please enter a new {what} ID.")
-    new_key = input(f"Please enter a new {what} name.")
-    new_value = input(f"Please enter a new {value} for {new_key}.")
-    new_dict = dict(ID = id, Key = new_key, Value = new_value)
-    list.append(new_dict)
-    util.save_to_a_csv(filename,list)
-    return_option(what, list, filename, value)
-
-def delete_function(what, list, filename, value):
-    util.open_a_csv_file(filename,list)
-    item_to_delete = input(f'Please enter the number for the {what} you wish to delete. ')
-    boolean = False
-    for item in list:
-        if item["ID"] == item_to_delete:
-            boolean = True
-            list.remove(item)
-    util.save_to_a_csv(filename,list)
-    return_option(what, list, filename, value)
-    if boolean == False:
-        print("ID not found!")
-        return_option(what, list, filename, value)
-    
-    
-def replace_function(what, list, filename, value):
-    util.open_a_csv_file(filename,list)
-    item_to_replace = input(f'Please enter the ID of the {what} you wish to replace...')
-    replace = False
-    for item in list:
-        if item["ID"] == item_to_replace:
-            replace = True
-            list.remove(item)
-            new_key = input(f"Please enter a new {what} name.")
-            new_value = input(f"Please enter a new {value} for {new_key}.")
-            new_dict = dict(ID = item_to_replace, Key = new_key, Value = new_value)
-            list.append(new_dict)
-            util.save_to_a_csv(filename,list) 
-            return_option(what, list, filename, value)
-    if replace == False: 
-        print("ID not found!")
-        return_option(what, list, filename, value)
+    Please enter your choice:
+    """
+    )
+    if contents == "1":
+        util.header("Product Screen")
+        menu("Product","price", "products")
         
-def update_function(what, list, filename, value):
-    util.open_a_csv_file(filename,list)
-    item_to_replace = input(f'Please enter the ID of the {what} you wish to replace...')
-    boolean = False
-    for item in list:
-        if item["ID"] == item_to_replace:
-            boolean = True
-            item["Key"] == item["Key"]
-            item["Value"] = input("Enter updated status...")
-            new_dict = dict(ID = item_to_replace, Key = item["Key"], Value = item["Value"])
-            list.remove(item)
-            list.append(new_dict)
-            util.save_to_a_csv(filename,list) 
-            return_option(what, list, filename, value)
-    if boolean == False:
-        print("ID not found!")
-        return_option(what, list, filename, value)
+    elif contents == "2":
+        util.header("Courier Screen")
+        menu("Courier", "number", "couriers")
+        
+    elif contents == "3":
+        util.header("Order Screen")
+        menu("Order", "Status", "orders")
+        
+    elif contents == "0":
+        exit_app()
+        
+    else:
+        start_app_return_option()
 
-def order_menu():
-    while True:
-        util.clear_terminal()
-        util.header("Order Menu")
-        order_option = input(
-            """Please select from the following options:
+def menu(what, val, table):
 
+    start_option = input(
+        f"""Please select from the following options:
+        
     0)   Return to Main Menu
-    1)   Print Out Order Screen
-    2)   Create New Order
-    3)   Update Order Status
-    4)   Update Order
-    5)   Delete Order
+    1)   Print Out {what} List
+    2)   Create {what}
+    3)   Update {what} {val}
+    4)   Replace {what}
+    5)   Delete {what}
     6)   Exit App
             """
-        )
-
-        if order_option == "0":
-            start_app()
-        elif order_option == "1":
-            print_csv_function("Order Menu", orders,"orders.csv", "VALUE")
-        elif order_option == "2":
-            create_order()
-        elif order_option == "3":
-            update_order_status()
-        elif order_option == "4":
-            update_order()
-        elif order_option == "5":
-            delete_order()
-        elif order_option == "6":
-            util.header("Cheerio!")
-            print("You are now exiting Tominoes, have a nice day!")
-            sys.exit()
-        else:
-            util.header("Order Screen")
-            print("You have not choosen the correctly. \nPlease try again.")
-            continue
-
-def create_order():
-    util.header("Order Menu")
-    order_id = input("Please enter the order ID...")
-    cust_name = input("Please enter the customer's name...")
-    cust_address = input("Please enter the customer's address...")
-    cust_num = input("Please enter the customer's number...")
-    util.header("Product Menu")
-    # Prints out list of products to choose from
-    print_csv_function("Products","products.csv",product_list,"Price")
-    cust_order = input("What would the customer like to order?")
-    # Status automatically defaults to preparing
-    status = "Preparing"
-    print_csv_function("Couriers","couriers.csv", courier_list, "Number")
-    courier = input("Please enter a courier you want to assign to the order...")
-    # Function to add new order to orders csv file - using append to add to end of file
-    # file -> variable that data is being parsed to
-    # with open suffice opens, appends and closes file
-    with open("orders.csv", mode="a") as file:
-        # Defines column names
-        content_header = [
-            "Order_ID",
-            "Name",
-            "Customer_Address",
-            "Customer_Number",
-            "Courier",
-            "Status",
-            "Order",
-        ]
-        writer = csv.DictWriter(file, fieldnames=content_header)
-        # Writes inputted info to sections
-        writer.writerow(
-            {
-                "Order_ID": order_id,
-                "Name": cust_name,
-                "Customer_Address": cust_address,
-                "Customer_Number": cust_num,
-                "Courier": courier,
-                "Status": status,
-                "Order": cust_order,
-            }
-        )
-    print()
-    print(
-        f"{cust_name}'s, order of {cust_order} is {status} and will be delivered by {courier} to {cust_address}.\nIn case of any difficulties, please phone the customer on {cust_num}. "
     )
-    order_return_option(input)
+    if start_option == "0":
+        util.header("Main Screen")
+        start_app()
+    elif start_option == "1":
+        print_from_db_menu(table)
+        return_option(what, val, table)
+    elif start_option == "2":
+        add_item_to_db(what, val, table)
+    elif start_option == "3":
+        update_item_from_db(what, val, table)
+    elif start_option == "4":
+        replace_item_in_db(what, val, table)
+    elif start_option == "5":
+        delete_item_from_db(what, val, table)
+    elif start_option == "6":
+        exit_app()
+    else:
+        menu_return_option_with_error(what, val, table)
+
+def print_from_db_menu(table):
+    
+    if table == 'products':
+        util.header("Product Menu")
+        print_from_list_using_tabulate(products_list)
+    elif table == 'couriers':
+        util.header("Courier List")
+        print_from_list_using_tabulate(couriers_list)
+    elif table == 'orders':
+        util.header("Order List")
+        print_from_list_using_tabulate(orders_list)
+
+def print_from_list_using_tabulate(list):
+    if list == products_list:
+        header = ["Product ID", "Product Name", "Price"]
+    elif list == couriers_list:
+        header = ["Courier ID", "Courier Name", "Phone Number"]
+    elif list == orders_list:
+        header = ["Order ID", "Customer Name", "Customer Address", "Customer Number", "Order Status", "Assigned Courier", "Item's Ordered"]
+    rows = [x.values() for x in list]
+    print(tabulate.tabulate(rows, header, tablefmt = 'fancy_grid'))
+
+def add_item_to_db(what, val, table):
+    if table == 'products':
+        add_product_menu(what, val, table)
+    elif table == 'couriers':
+        add_courier_to_db(what, val, table)
+    elif table == 'orders':
+        add_order_to_db(what, val, table)
+    return_option(what, val, table)
+
+def add_product_menu(what, val, table):
+    added_item = input('Please enter the name of the product you wish to add...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if added_item == "0":
+        util.header("Product Screen")
+        menu_return_option(what, val, table)
+    else:
+        add_product_write_to_db(what, val, table, added_item)
+        
+def add_product_write_to_db(what, val, table, added_item):
+    added_price = input(f'Please enter the price of the {added_item} you wish to add...')
+    while added_price:
+        try:
+            cursor = connection.cursor()
+            added_price = float(added_price)
+            cursor.execute(f'INSERT INTO products (product_name, product_price) VALUES ("{added_item}", {added_price})')
+            cursor.close()
+            connection.commit()
+            connection.close()
+            menu_return_option(what, val, table)
+        except ValueError:
+            print('The input you entered is not a valid price, please try again...')
+            add_product_write_to_db(what, val, table, added_item)
+
+def add_courier_to_db(what, val, table): 
+    added_item = input('Please enter the name of the courier you wish to add...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if added_item == "0":
+        util.header("Courier Screen")
+        menu_return_option(what, val, table)
+    else:
+        cursor = connection.cursor()
+        added_number = input(f'Please enter the phone number of the {added_item} you wish to add...')
+        cursor.execute(f'INSERT INTO couriers (courier_name, courier_number) VALUES ("{added_item}", "{added_number}")')
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+def add_order_to_db(what, val, table):
+    cursor = connection.cursor()
+    cust_name = input(f"Please enter the customer's name...\n \nPlease press 0 if you wish to return to the previous menu...")
+    if cust_name == "0":
+        util.header("Order Screen")
+        menu_return_option(what, val, table)
+    else:
+        cust_address = input("Please enter the customer's address...").title()
+        cust_num = input("Please enter the customer's number...")
+        util.header("Product List")
+        print_from_list_using_tabulate(products_list)
+        cust_order = input("What would the customer like to order?")
+        status = ('Order Received')
+        util.header("Courier List")
+        print_from_list_using_tabulate(couriers_list)
+        courier_assigned = input("Please enter a courier you want to assign to the order...")
+        cursor.execute(f'INSERT INTO orders (customer_name, customer_address, phone_number, order_status,   courier_assigned, customer_order) VALUES ("{cust_name}", "{cust_address}", "{cust_num}", "{status}", "    {courier_assigned}", "{cust_order}")')    
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+def update_item_from_db(what, val, table):
+    if table == 'products':
+        update_product_price_in_db(what, val, table)
+    elif table == 'couriers':
+        update_courier_number_in_db(what, val, table)
+    elif table == 'orders':
+        update_order_courier_status_in_db(what, val, table)
+    return_option(what, val, table)
+
+def update_product_price_in_db(what, val, table):
+    cursor = connection.cursor()
+    print_from_db_menu(table)
+    product_to_change = input('Please enter the ID for the product you want to update the price for...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if product_to_change == "0":
+        util.header("Product Screen")
+        menu_return_option(what, val, table)
+    else:  
+    #THIS NEEDS FIXING - OUTPUTS NO AND YES VALUES FOR ALL ITEMS IN DICTIONARY
+        for x in products_list:
+            if x['product_id'] == id:
+                new_price = input(f'Please enter the new price for the product...')
+                cursor.execute(f'UPDATE products SET product_price = {new_price} WHERE  product_id = {product_to_change}')
+                cursor.close()
+                connection.commit()
+                connection.close() 
+            elif x['product_id'] != id:
+                print(" You chose an invalid ID.")
+                return_option(what, val, table)
+
+def update_courier_number_in_db(what, val, table):
+    print_from_db_menu(table)
+    print()
+    courier_to_change = input('Please enter the ID for the courier whose number you want to update...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if courier_to_change == "0":
+        util.header("Courier Screen")
+        menu_return_option(what, val, table)
+    else:
+        update_courier_number_write_to_db(what, val, table, courier_to_change)
+
+def update_courier_number_write_to_db(what, val, table, courier_to_change):
+    new_number = input(f'Please enter the new phone number...')
+    while new_number: 
+        try:
+            cursor = connection.cursor()
+            new_number = int(new_number)
+            cursor.execute(f'UPDATE {table} SET courier_number = "{new_number}" WHERE   courier_id = {courier_to_change}')
+            cursor.close()
+            connection.commit()
+            menu_return_option(what, val, table)
+        except ValueError:
+            print('The input you entered is not a valid phone number, please try again...')
+            update_courier_number_write_to_db(what, val, table, courier_to_change)
+
+def update_order_courier_status_in_db(what, val, table):
+    cursor = connection.cursor()
+    util.header("Order List")
+    print_from_list_using_tabulate(orders_list)
+    id_for_status_change = input('Please enter the ID of the order you wish to change...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if id_for_status_change == "0":
+        util.header("Order Screen")
+        menu_return_option(what, val, table)
+    else:
+        updated_status = input('Please enter the updated Status...').title()
+        cursor.execute(f'UPDATE {table} SET order_status = "{updated_status}" WHERE     order_id ={id_for_status_change}')
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+def replace_item_in_db(what, val, table):
+    if table == 'products':
+        replace_product_menu(what, val, table)
+    elif table == 'couriers':
+        replace_courier_in_db(what, val, table)
+    elif table == 'orders':
+        replace_order_options_in_db(what, val, table)
+    return_option(what, val, table)
+    
+def replace_product_menu(what, val, table):
+    print_from_db_menu(table)
+    product_to_change = input('Please enter the ID for the product you want to replace...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if product_to_change == "0":
+        util.header("Product Screen")
+        menu_return_option(what, val, table)
+    else:
+        new_product = input("Please enter the product you wish to add to the menu...").title()
+        replace_product_write_to_db(what, val, table, product_to_change, new_product)
+        
+        
+def replace_product_write_to_db(what, val, table, product_to_change, new_product):
+    new_product_price = input(f"Please enter the price for the {new_product}.")        
+    while new_product_price:
+        try:
+            cursor = connection.cursor()
+            new_product_price = float(new_product_price)
+            cursor.execute(f'UPDATE products SET product_name = "{new_product}" WHERE product_id = {product_to_change}')
+            cursor.execute(f'UPDATE products SET product_price = {new_product_price} WHERE product_id = {product_to_change}')
+            cursor.close()
+            connection.commit()
+            connection.close()  
+            menu_return_option(what, val, table)
+        except ValueError:
+            print('The input you entered is not a valid price, please try again...')
+            replace_product_write_to_db(what, val, table, product_to_change, new_product)
 
 
-# If you delete more than one order, it produces infinite writing loop in file!
-# PLEASE FIX!!!!
-def delete_order():
-    util.header("Delete Order Menu")
-    print_csv_function("Orders", orders, "orders.csv", "ORDERS")
-    delete_order_number = input("Please enter the order number you wish to delete...").capitalize()
-    with open("orders.csv", "r") as file:
-        reader = csv.reader(file)
-        for row in reader:
-            orders.append(row)
-            for line in row:
-                if line == delete_order_number:
-                    orders.remove(row)
-                with open("orders.csv", "w") as writeFile:
-                    writer = csv.writer(writeFile)
-                    writer.writerows(orders)
-    util.clear_terminal()
-    util.header("Updated Order Menu")
-    order_menu()
+def replace_courier_in_db(what, val, table):
+    cursor = connection.cursor()
+    print_from_db_menu(table)
+    courier_to_change = input('Please enter the ID for the courier you want to replace...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if courier_to_change == "0":
+        util.header("Courier Screen")
+        menu_return_option(what, val, table)
+    else:
+        new_courier = input("Please enter the name of the courier you wish to add to the roster...")
+        new_courier_number = str(input(f"Please enter the phone number for the {new_courier}."))
+        cursor.execute(f'UPDATE {table} SET courier_name = "{new_courier}" WHERE courier_id = {courier_to_change}')
+        cursor.execute(f'UPDATE {table} SET courier_number = "{new_courier_number}" WHERE courier_id = {courier_to_change}')
+        cursor.close()
+        connection.commit() 
+        connection.close()
 
-def return_option(what, list, filename, value):
+def replace_order_options_in_db(what, val, table):
+    cursor = connection.cursor()
+    util.header("Order List")
+    print_from_list_using_tabulate(orders_list)
+    id_of_order_to_change = input('Please enter the order ID for the order that you want to update...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if id_of_order_to_change == "0":
+        util.header("Order Screen")
+        menu_return_option(what, val, table)
+    else: 
+        updated_name = input("Enter updated name...").title()
+        updated_address = input("Enter updated address...").title()
+        updated_number = input("Enter updated number...")
+        util.header("Courier Table")
+        print_from_db_menu('couriers')
+        updated_courier = input("Enter updated courier...")
+        updated_status = input("Enter updated status...").title()
+        util.header("Product Menu")
+        print_from_db_menu('products')
+        updated_order = input("Enter updated order...").title()
+
+        if updated_name == "":
+            pass
+        else:
+            cursor.execute(f'UPDATE orders SET customer_name = "{updated_name}" WHERE order_id =    {id_of_order_to_change}')
+        if updated_address == "":
+            pass
+        else:
+            cursor.execute(f'UPDATE orders SET customer_address = "{updated_address}" WHERE order_id =  {id_of_order_to_change}')
+        if updated_number == "":
+            pass
+        else: 
+            cursor.execute(f'UPDATE orders SET phone_number = "{updated_number}" WHERE order_id =   {id_of_order_to_change}')
+        if updated_courier == "":
+            pass
+        else: 
+            cursor.execute(f'UPDATE orders SET courier_assigned = "{updated_courier}" WHERE order_id =  {id_of_order_to_change}')
+        if updated_status == "":
+            pass
+        else:
+            cursor.execute(f'UPDATE orders SET order_status = "{updated_status}" WHERE order_id =   {id_of_order_to_change}')
+        if updated_order == "":
+            pass
+        else:
+            cursor.execute(f'UPDATE orders SET customer_order = "{updated_order}" WHERE order_id =  {id_of_order_to_change}')
+        cursor.close()
+        connection.commit()   
+        connection.close() 
+
+def delete_item_from_db(what, val, table):
+    if table == 'products':
+        delete_product_from_db(what, val, table)
+    elif table == 'couriers':
+        delete_courier_from_db(what, val, table)
+    elif table == 'orders':
+        delete_order_from_db(what, val, table)
+    return_option(what, val, table) 
+
+def delete_product_from_db(what, val, table):
+    cursor = connection.cursor()
+    print_from_db_menu(table)
+    id_to_delete = input('Please enter the ID of the product you wish to delete...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if id_to_delete == "0":
+        util.header("Product Screen")
+        menu_return_option(what, val, table)
+    else:
+        cursor.execute(f'DELETE FROM products where product_id = {id_to_delete}')
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+def delete_courier_from_db(what, val, table):
+    cursor = connection.cursor()
+    print_from_db_menu(table)
+    id_to_delete = input("Please enter the ID of the courier you wish to delete...\n \nPlease press 0 if you wish to return to the previous menu...")
+    if id_to_delete == "0":
+        util.header("Courier Screen")
+        menu_return_option(what, val, table)
+    else:
+        cursor.execute(f'DELETE FROM couriers where courier_id = {id_to_delete}')
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+def delete_order_from_db(what, val, table):
+    cursor = connection.cursor()
+    print_from_db_menu(table)
+    id_to_delete = input('Please enter the ID of the order you wish to delete...\n \nPlease press 0 if you wish to return to the previous menu...')
+    if id_to_delete == "0":
+        util.header("Order Screen")
+        menu_return_option(what, val, table)
+    else:
+        cursor.execute(f'DELETE FROM orders where order_id = {id_to_delete}')
+        cursor.close()
+        connection.commit()
+        connection.close()
+
+
+def return_option(what, val, table):
     print()
     while True:
         rtn_input = input("Would you like to return to the " + what + " screen? Y/N")
+        
         if rtn_input.upper() == "Y" or rtn_input.upper() == "YES":
-            util.clear_terminal()
-            menu(what, list, filename, value)
+            util.header(what+" Screen")
+            menu(what, val, table)
+            
         elif rtn_input.upper() == "N" or rtn_input.upper() == "NO":
-            util.header("Cheerio!")
-            print("You are now exiting Tominoes, have a nice day!")
-            sys.exit()
+            exit_app()
+            
         else:
             print("You have not choosen a suitable option, please try again...")
             continue
 
-def print_csv_function(what,list,filename,value):
-    util.header(what)
-    # Using pandas module to prettify the order csv fiel
-    df = pandas.read_csv(filename, index_col=0)
-    print(df)    
-    return_option(what, list, filename, value)
-
-# Update order and Update status, if re entering function without leaving repeats the order menu
-# It does not save and close the list, instead adds to it!
-# This needs to be fixed!!!!
-def update_order():
-    util.header("Update Order Menu")
-    edit_status_input = input(
-        "Please enter the order ID for the status change..."
-    ).capitalize()
-    file = open("orders.csv", "r")  # file is assigned variable
-    reader = csv.reader(file)  # csv reader allows us to go through one row at a time
-    found = False
-    for cell in reader:
-        if cell[0] == edit_status_input:
-            update_name = input("Enter updated name...").title()
-            if update_name == "":
-                pass
-            else:
-                cell[1] = update_name
-            update_address = input("Enter updated address...").title()
-            if update_address == "":
-                pass
-            else:
-                cell[2] = update_address
-            update_number = input("Enter updated number...").title()
-            if update_number == "":
-                pass
-            else:
-                cell[3] = update_number
-            update_courier = input("Enter updated courier...").title()
-            if update_courier == "":
-                pass
-            else:
-                cell[4] = update_courier
-            update_status = input("Enter updated status...").title()
-            if update_status == "":
-                pass
-            else:
-                cell[5] = update_status
-            update_order = input("Enter updated order...").title()
-            if update_order == "":
-                pass
-            else:
-                cell[6] = update_order
-            found = True
-        orders.append(cell)
-    if found == 0:
-        print("Order Not Found")
-        file.close
-        order_return_option(input)
-    else:
-        file = open("orders.csv", "w", newline="")
-        csvr = csv.writer(file)
-        csvr.writerows(orders)
-        file.close()
-    util.clear_terminal()
-    order_menu()
+def start_app_return_option(): 
+    util.header("Main Screen")
+    print("You must make a selection from 0 - 3")
+    print("Please try another selection")
+    start_app()
 
 
-def update_order_status():
-    util.header("Update Order Status")
-    edit_status_input = input(
-        "Please enter the order ID for the status change..."
-    ).capitalize()
-    file = open("orders.csv", "r")  # file is assigned variable
-    reader = csv.reader(file)  # csv reader allows us to go through one row at a time
-    found = False
-    for cell in reader:
-        if cell[0] == edit_status_input:
-            cell[5] = input("Enter updated status...")
-            found = True
-        orders.append(cell)
-    if found == 0:
-        print("Order Not Found")
-        file.close
-        order_return_option(input)
-    else:
-        file = open("orders.csv", "w", newline="")
-        csvr = csv.writer(file)
-        csvr.writerows(orders)
-        file.close()
-    order_menu()
-
-
-def order_return_option(input):
+def menu_return_option_with_error(what, val, table): 
+    util.header(f"{what} Screen")
+    print("You must make a selection from 0 - 6")
+    print("Please try another selection")
     print()
-    while True:
-        rtn_input = input("Would you like to return to the order menu screen? Y/N")
-        if rtn_input.upper() == "Y" or rtn_input.upper() == "YES":
-            util.clear_terminal()
-            return order_menu()
-        elif rtn_input.upper() == "N" or rtn_input.upper() == "NO":
-            print("You are now exiting Tominoes, have a nice day!")
-            sys.exit()
-        else:
-            print("You have not choosen a suitable option, please try again...")
-            continue
+    menu(what, val, table)
+    
+def menu_return_option(what, val, table): 
+    util.header(f"{what} Screen")
+    print()
+    menu(what, val, table)
 
 
+def exit_app():
+    util.header("Cheerio!")
+    print("You are now exiting Tominoes, have a nice day!")
+    print()
+    sys.exit()
+
+util.header("Main Screen")
 
 start_app()
 
+
+
+#next(item for item in products_list if item["product_name"] == "1")
+#print(next((item for item in products_list if item["product_id"] == "1"), False))
+
+
+# if(element for element in products_list if element['product_id'] != 12):
+#     print('Y')
+# else:
+#     print('no')
+
+# def search(id):
+#     for x in products_list:
+#         if x['product_id'] == id:
+#             print("YES")
+#         elif x['product_id'] != id:
+#                 print("NO")
+#         # elif x['product_id'] != id:
+#         #     print('NO')
+#         # else:
+#         #     start_app()
+        
+# search(3)
