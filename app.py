@@ -457,6 +457,7 @@ def start_app_return_option():
     print("Please try another selection")
     start_app()
 
+
 def menu_return_option_with_error(what, val, table): 
     util.header(f"{what} Screen")
     print("You must make a selection from 0 - 6")
@@ -477,6 +478,7 @@ def exit_app():
     sys.exit()
 
 util.header("Main Screen")
+
 start_app()
 
 
