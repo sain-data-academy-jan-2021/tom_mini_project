@@ -22,50 +22,9 @@ def ReadFromDatabase(table):
     cursor.close()
     return result
 
-temp_list = []
 products_list = ReadFromDatabase('products')
 couriers_list = ReadFromDatabase('couriers')
 orders_list = ReadFromDatabase('orders')
-
-def update_courier_number_in_db_with_input_error_handling(what, val, table):
-    cursor = connection.cursor()
-    cursor.execute('SELECT courier_id FROM couriers')
-    fieldnames = [i[0] for i in cursor.description]
-    
-    print(fieldnames)
-    # print_from_db_menu(table)
-    # courier_to_change = input('Please enter the ID for the courier whose number you want to update...')    
-    # rows = cursor.fetchall()
-    # for row in rows:
-    #     temp_list.append(row)
-    # print(temp_list)
-    # if int(courier_to_change) in temp_list:
-    #     print(" in LIST")
-    # elif int(courier_to_change) not in temp_list:
-    #     print(" not in")
-    # else: 
-    #     print("Neither IN or OUT")
-    
-    # if courier_to_change in temp_list:
-    #     new_number = input(f'Please enter the new phone number...')
-    #     cursor.close()
-    #     cursor = connection.cursor()
-    #     cursor.execute(f'UPDATE {table} SET courier_number = "{new_number}" WHERE courier_id = {courier_to_change}')
-    # else:
-    #     while True:
-    #         try_again = input("You have chosen a Courier ID that is not in the list, would you like to try again? \nY/N?")
-    #         if try_again.upper() == "Y" or try_again.upper() == "YES":
-    #             update_courier_number_in_db_with_input_error_handling(what, val, table)
-    #         elif try_again.upper() == "N" or try_again.upper() == "NO":
-    #             menu("Courier", "number", "couriers")
-    #         else:
-    #             print("You have not choosen a suitable option, please try again...")
-    #             continue
-    temp_list.clear()
-    cursor.close()
-    connection.commit() 
-    
-# update_courier_number_in_db_with_input_error_handling("Courier", "Number", "couriers")
 
 def start_app():
     contents = input(
@@ -130,7 +89,6 @@ def menu(what, val, table):
         menu_return_option_with_error(what, val, table)
 
 def print_from_db_menu(table):
-    
     if table == 'products':
         util.header("Product Menu")
         print_from_list_using_tabulate(products_list)
@@ -149,7 +107,7 @@ def print_from_list_using_tabulate(list):
     elif list == orders_list:
         header = ["Order ID", "Customer Name", "Customer Address", "Customer Number", "Order Status", "Assigned Courier", "Item's Ordered"]
     rows = [x.values() for x in list]
-    print(tabulate.tabulate(rows, header, tablefmt = 'fancy_grid'))
+    print(tabulate.tabulate(rows, header, tablefmt = 'pretty'))
 
 def add_item_to_db(what, val, table):
     if table == 'products':
@@ -195,6 +153,7 @@ def add_courier_to_db(what, val, table):
         cursor.close()
         connection.commit()
         connection.close()
+        menu_return_option(what, val, table)
 
 def add_order_to_db(what, val, table):
     cursor = connection.cursor()
@@ -225,7 +184,8 @@ def update_item_from_db(what, val, table):
     elif table == 'orders':
         update_order_courier_status_in_db(what, val, table)
     return_option(what, val, table)
-
+    
+# NEED TO READ THROUGH LIST OF IDS TO DETERMINE WHETHER EXISTS OR NOT 
 def update_product_price_in_db(what, val, table):
     cursor = connection.cursor()
     print_from_db_menu(table)
@@ -262,7 +222,8 @@ def update_courier_number_write_to_db(what, val, table, courier_to_change):
         try:
             cursor = connection.cursor()
             new_number = int(new_number)
-            cursor.execute(f'UPDATE {table} SET courier_number = "{new_number}" WHERE   courier_id = {courier_to_change}')
+            new_new_number = '0' + str(new_number)
+            cursor.execute(f'UPDATE {table} SET courier_number = ("{new_new_number}") WHERE   courier_id = {courier_to_change}')
             cursor.close()
             connection.commit()
             menu_return_option(what, val, table)
@@ -270,6 +231,7 @@ def update_courier_number_write_to_db(what, val, table, courier_to_change):
             print('The input you entered is not a valid phone number, please try again...')
             update_courier_number_write_to_db(what, val, table, courier_to_change)
 
+# NEED TO READ THROUGH LIST OF IDS TO DETERMINE WHETHER EXISTS OR NOT 
 def update_order_courier_status_in_db(what, val, table):
     cursor = connection.cursor()
     util.header("Order List")
@@ -303,8 +265,7 @@ def replace_product_menu(what, val, table):
     else:
         new_product = input("Please enter the product you wish to add to the menu...").title()
         replace_product_write_to_db(what, val, table, product_to_change, new_product)
-        
-        
+
 def replace_product_write_to_db(what, val, table, product_to_change, new_product):
     new_product_price = input(f"Please enter the price for the {new_product}.")        
     while new_product_price:
@@ -320,7 +281,6 @@ def replace_product_write_to_db(what, val, table, product_to_change, new_product
         except ValueError:
             print('The input you entered is not a valid price, please try again...')
             replace_product_write_to_db(what, val, table, product_to_change, new_product)
-
 
 def replace_courier_in_db(what, val, table):
     cursor = connection.cursor()
@@ -469,7 +429,6 @@ def menu_return_option(what, val, table):
     print()
     menu(what, val, table)
 
-
 def exit_app():
     util.header("Cheerio!")
     print("You are now exiting Tominoes, have a nice day!")
@@ -480,25 +439,42 @@ util.header("Main Screen")
 start_app()
 
 
+# def add_order_to_db(what, val, table):
+#     cursor = connection.cursor()
+#     cust_name = input(f"Please enter the customer's name...\n \nPlease press 0 if you wish to return to the previous menu...")
+#     if cust_name == "0":
+#         util.header("Order Screen")
+#         menu_return_option(what, val, table)
+#     else:
+#         cust_address = input("Please enter the customer's address...").title()
+#         cust_num = input("Please enter the customer's number...")
+#         util.header("Product List")
+#         print_from_list_using_tabulate(products_list)
+#         cust_order = input("What would the customer like to order?")
+#         status = ('Order Received')
+#         util.header("Courier List")
+#         print_from_list_using_tabulate(couriers_list)
+#         courier_assigned = input("Please enter a courier you want to assign to the order...")
+#         cursor.execute(f'INSERT INTO orders (customer_name, customer_address, phone_number, order_status,   courier_assigned, customer_order) VALUES ("{cust_name}", "{cust_address}", "{cust_num}", "{status}", "    {courier_assigned}", "{cust_order}")')    
+#         cursor.close()
+#         connection.commit()
+#         connection.close()
 
-#next(item for item in products_list if item["product_name"] == "1")
-#print(next((item for item in products_list if item["product_id"] == "1"), False))
 
 
-# if(element for element in products_list if element['product_id'] != 12):
-#     print('Y')
-# else:
-#     print('no')
-
-# def search(id):
-#     for x in products_list:
-#         if x['product_id'] == id:
-#             print("YES")
-#         elif x['product_id'] != id:
-#                 print("NO")
-#         # elif x['product_id'] != id:
-#         #     print('NO')
-#         # else:
-#         #     start_app()
+def create_a_new_order(what, val, table):
+    cursor = connection.cursor()
+    cust_name = input(f"Please enter the customer's name...\n \nPlease press 0 if you wish to return to the previous menu...")
+    if cust_name == "0":
+        util.header("Order Screen")
+        menu_return_option(what, val, table)
+    else:
+        cust_address = input("Please enter the customer's address...").title()
+        cust_num = input("Please enter the customer's number...")
         
-# search(3)
+        
+        
+        
+        cursor.close()
+        connection.commit()
+        connection.close()
