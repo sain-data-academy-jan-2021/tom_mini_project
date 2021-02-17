@@ -6,6 +6,8 @@ import pandas
 courier_list = []
 product_list = []
 
+
+
 def clear_terminal():
     os.system('clear')
 
