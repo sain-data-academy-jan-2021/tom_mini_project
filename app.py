@@ -23,6 +23,8 @@ def ReadFromDatabase(table):
     cursor.close()
     return result
 
+
+
 products_list = ReadFromDatabase('products')
 couriers_list = ReadFromDatabase('couriers')
 orders_list = ReadFromDatabase('orders')
