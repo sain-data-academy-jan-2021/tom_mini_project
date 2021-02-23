@@ -5,6 +5,9 @@ import pymysql
 import tabulate
 
 
+
+
+
 connection = pymysql.connect("localhost", "root", "password", "miniproject")
 
 def ReadFromDatabase(table):
