@@ -1,15 +1,9 @@
 import os 
 import sys
-import csv
-import pandas
 
-courier_list = []
-product_list = []
+# Generic Title Header function 
 
-def clear_terminal():
-    os.system('clear')
-
-def header(sub_title):
+def app_header(sub_title):
     
     clear_terminal()
     # Variable to import for main menu graphical setup
@@ -24,53 +18,26 @@ def header(sub_title):
     print('-'*len(sub_title))
     print()
 
-def open_a_csv_file(filename,list):
-    
-    with open(filename) as file:
-        csv_file = csv.DictReader(file) 
-        for row in csv_file:
-            list.append(row)
 
-def save_to_a_csv(filename,list):
-    
-    csv_columns = list[0].keys()
-    
-    with open(filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            writer.writeheader()
-            for data in list:
-                writer.writerow(data)
+# Clear Terminal Function
 
-def save_product_to_a_csv(filename,list):
+def clear_terminal():
+    os.system('clear')
     
-    csv_columns = list[0].keys()
-    
-    with open(filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            writer.writeheader()
-            for data in list:
-                writer.writerow(data)
+# Validates an inputted phone number
 
-def order_to_a_csv(filename,list):
-    
-    csv_columns = ["ID","Name","Customer_Address","Customer_Number","Courier","Status","Order"]
-    
-    with open(filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            writer.writeheader()
-            for data in list:
-                writer.writerow(data)                
+def validate_number(who):
+    while True:
+        added_number = input(f'Please enter the phone number of the {who}...')
+        if len(added_number) == 11:
+            return added_number
+        else:
+            print('You have not entered a recognised phone number, please try again...')
+            
 
-def list_index(list):
-    
-    index_list = []
-    for item in list:
-        index_list.append(item['ID'])
-        
-    return index_list
 
-def last_id(table):
-    first_key = list(table[0].keys())[0]
-    last_id = int((table[-1][first_key]))
-    last_id += 1
-    return str(last_id)
+def exit_app():
+    app_header("Cheerio!")
+    print("You are now exiting Tominoes, have a nice day!")
+    print()
+    sys.exit()
