@@ -4,16 +4,9 @@ import util
 import pymysql
 import tabulate
 
-
-
-
-
 connection = pymysql.connect("localhost", "root", "password", "miniproject")
-
 def ReadFromDatabase(table):
     result = []
-    cursor = connection.cursor()
-    cursor.execute(f"SELECT * FROM {table}")
     rows = cursor.fetchall()
     field_names = [i[0] for i in cursor.description]
     for row in rows:
