@@ -1,9 +1,9 @@
 from collections import Counter 
 import matplotlib.pyplot as plt 
 import math
-from util import *
-from database import *
-from printing import * 
+from util import app_header
+from database import connect_to_db, execute_sql_crud, execute_sql_select, execute_sql_select_
+from printing import print_from_db_menu,report_table
 
 def report_1(table):
     # Report to show the customer name, address and list of products in an order.
@@ -93,16 +93,16 @@ def report_4():
     for row in results:
         order_status.append(row[2]) 
     report_table(name, address, order_status)
-    
 
-
-def report_5(connection):
+# Pie chart depicting Order status percentages 
+def report_5():
+    connection = connect_to_db()
     o_status = execute_sql_select(connection, ('SELECT order_status FROM orders'))
 
     counts = Counter(x[0] for x in o_status)
     d = (counts['Order Delivered'])
-    r = (counts['Order Received'])
-    c = (counts['Order Cancelled'])
+    r = (counts['Order R
+    c = (counts['Order Canceleceived'])led'])
     p = (counts['Order Preparing'])
 
     labels = 'Orders Received', 'Orders Preparing', 'Orders Delivered', 'Orders Cancelled'
@@ -116,8 +116,9 @@ def report_5(connection):
 
     plt.show()
 
-def report_6(connection): 
-    
+# Bar chart showing number of orders assigned per courier 
+def report_6(): 
+    connection = connect_to_db()
     o_courier_assigned = execute_sql_select(connection, ('SELECT courier_assigned FROM orders'))
     o_courier_names = execute_sql_select(connection, ('SELECT courier_name FROM couriers'))
     counts = Counter(x[0] for x in o_courier_assigned)

@@ -1,6 +1,6 @@
 import tabulate
 from util import app_header
-from database import *
+from database import connect_to_db
 
 # Read from database to dictionary for print_from_db_function
 

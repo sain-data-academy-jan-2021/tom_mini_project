@@ -1,4 +1,0 @@
-starter_dict = {'Garlic Bread':2.99, 'Nachos':3.49, 'Wedges':2.49, 'Chicken Wings':3.99} 
-main_dict = {'Pepperoni':2.99, 'Meat Feast':3.49}
-dessert_dict = {'Icecream': 2.99, 'Sorbet':2.49}
-drink_dict = {'Coke' : 0.99, 'Malbec' : 4.99}
