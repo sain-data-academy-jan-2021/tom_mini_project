@@ -1,26 +1,22 @@
-from util import *
-from printing import * 
-from database import * 
+from util import app_header, validate_number
+from printing import print_from_db_menu
+from database import connect_to_db, execute_sql_crud, execute_sql_select, execute_sql_select_
+import database
 
 # Create a new courier/product 
 def add_item_write_to_db(what, val, table, added_item):
-    connection = connect_to_db()
+    connection = database.connect_to_db()
     while True:
         if what == "Product":
             try:
                 added_val = float(input(f'Please enter the {val} of the {added_item} you wish to add...'))
-                print("before")
-                execute_sql_crud(connection, f'INSERT INTO products (product_name, product_price) VALUES ("{added_item}", {added_val})')
-                print("after")
+                database.execute_sql_crud(connection, f'INSERT INTO products (product_name, product_price) VALUES ("{added_item}", {added_val})')
             except ValueError:
                 print("You have not entered a price, please try again...")
                 continue
         elif what == "Courier":
             added_number = validate_number('courier')
-            print("before new")
-            execute_sql_crud(connection, f'INSERT INTO couriers (courier_name, courier_number) VALUES ("{added_item}", "{added_number}")')
-            print("after new")
-        connection.close()
+            database.execute_sql_crud(connection, f'INSERT INTO couriers (courier_name, courier_number) VALUES ("{added_item}", "{added_number}")')
         break
     
 
@@ -51,7 +47,7 @@ def replace_item_write_to_db(connection, what, val, table, item_to_replace):
     while True:
         if what == "Product":
             new_product = input("Please enter the product you wish to add to the menu...").title()
-            new_product_price = float(input(f"Please enter the price for the {new_product}."))
+            new_product_price = float(input(f"Please enter the price for the {new_product}...    £"))
             execute_sql_crud(connection, (f'UPDATE products SET product_name = "{new_product}" WHERE products_id = {item_to_replace}'))
             execute_sql_crud(connection, (f'UPDATE products SET product_price = {new_product_price} WHERE products_id = {item_to_replace}'))
             break
@@ -111,12 +107,12 @@ def replace_order_options_in_db(connection, what, val, table):
 
 
 # Update an item generic write to database function
-def update_item_write_to_db(connection, what, val, table, update_item):
+def update_item_write_to_db(what, val, table, update_item):
     connection = connect_to_db()
     while True:
         if what == "Product":
             try:
-                new_price = float(input(f'Please enter the new price for the product {update_item}...'))
+                new_price = float(input(f'Please enter the new price for the product {update_item}...    £'))
             except ValueError:
                 print("You have not entered a price, please try again...")
                 continue
@@ -214,7 +210,6 @@ def assign_products_to_order(connection):
         assigned_product = input("Please enter a product you want to assign to the order...")
         if int(assigned_product) == 0:
             break
-        # ENTER A SPLIT STATEMENT HERE 
         elif int(assigned_product) not in existing_product_ids:
             print("Invalid product ID, please try again...")
             continue
