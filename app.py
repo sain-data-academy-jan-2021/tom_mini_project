@@ -1,3 +1,4 @@
+
 # v.1. ß3
 from util import * 
 from database import * 
@@ -5,10 +6,17 @@ from printing import *
 from reporting import *
 from crud import * 
 
+from database import connect_to_db
+from printing import print_from_db_menu
+from reporting import report_1, report_2, report_3, report_4, report_5, report_6
+from crud import delete_row, add_order, add_item_write_to_db, replace_item_write_to_db, replace_order_options_in_db, update_item_write_to_db
+from util import app_header, exit_app
+
+
 # Main contents menu - initialised from starting app
 def start_app():
     while True:
-        connection = connect_to_db()
+        
         
         contents = input(
             """
@@ -23,18 +31,18 @@ def start_app():
         )
         if contents == "1":
             app_header("Product Main Menu")
-            menu(connection, "Product","price", "products")
+            menu("Product","price", "products")
 
         elif contents == "2":
             app_header("Courier Main Menu")
-            menu(connection, "Courier", "number", "couriers")
+            menu("Courier", "number", "couriers")
 
         elif contents == "3":
             app_header("Order Main Menu")
-            menu(connection, "Order", "Status", "orders")
+            menu("Order", "Status", "orders")
 
         elif contents == "4":
-            reporting_menu(connection)
+            reporting_menu()
 
         elif contents == "0":
             exit_app()
@@ -44,7 +52,7 @@ def start_app():
             print("You made an incorrect selection, please try again... \n")
 
 # Generic sub menu for products, couriers and orders 
-def menu(connection, what, val, table):
+def menu(what, val, table):
     while True: 
         connection = connect_to_db()
         start_option = input(
@@ -72,12 +80,12 @@ def menu(connection, what, val, table):
             return_option(connection, what, val, table)
 
         elif start_option == "3":
-            update_item_sub_menu(connection, what, val, table)
+            update_item_sub_menu(what, val, table)
 
         elif start_option == "4":
             replace_item_in_db(connection, what, val, table)
             app_header(what)
-            menu(connection, what, val, table)
+            menu(what, val, table)
 
         elif start_option == "5":
             delete_row(connection, what, val, table)
@@ -94,7 +102,7 @@ def menu(connection, what, val, table):
 
 
 # Menu screen for reporting section 
-def reporting_menu(connection):
+def reporting_menu():
     while True: 
         app_header("Reports Screen")
         reporting_option = input(
@@ -114,22 +122,22 @@ def reporting_menu(connection):
             start_app()
         elif reporting_option == "1":
             report_1('orders')
-            reports_return_option(connection)
+            reports_return_option()
         elif reporting_option == "2":
             report_2()
-            reports_return_option(connection)
+            reports_return_option()
         elif reporting_option == "3":
             report_3()
-            reports_return_option(connection)
+            reports_return_option()
         elif reporting_option == "4":
             report_4()
-            reports_return_option(connection)
+            reports_return_option()
         elif reporting_option == "5":
-            report_5(connection)
-            reports_return_option(connection)
+            report_5()
+            reports_return_option()
         elif reporting_option == "6":
-            report_6(connection)
-            reports_return_option(connection)
+            report_6()
+            reports_return_option()
         else:
             app_header("Reports Screen")
             print("You made an incorrect selection, please try again... \n \n Please press 0 to return to the main menu...\n")
@@ -141,22 +149,22 @@ def reporting_menu(connection):
 # Create generic item to database initial menu
 def add_item_to_db(connection, what, val, table):
     if table == 'products' or table == 'couriers':
-        add_item_sub_menu(connection, what, val, table)
+        add_item_sub_menu(what, val, table)
     elif table == 'orders':
         add_order(connection, what, val, table)
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
 
 # Create sub menu for products or couriers
-def add_item_sub_menu(connection, what, val, table):
+def add_item_sub_menu(what, val, table):
     added_item = input(f'Please enter the name of the {what} you wish to add...\n \nPlease press 0 if you wish to return to the previous menu...')
     if added_item == "0":
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
     else:
-        add_item_write_to_db(connection, what, val, table, added_item)
+        add_item_write_to_db(what, val, table, added_item)
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
 
 
 # REPLACE
@@ -175,27 +183,27 @@ def replace_item_menu(connection, what, val, table):
     item_to_replace = input(f'Please enter the ID for the {what} you want to replace...\n \nPlease press 0 if you wish to return to the previous menu...')
     if item_to_replace == "0":
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
     else:
         replace_item_write_to_db(connection, what, val, table, item_to_replace)
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
 
 
 # UPDATE
 
 # Updating an item generic sub menu
-def update_item_sub_menu(connection, what, val, table):
+def update_item_sub_menu(what, val, table):
     app_header(f'Update {what} {val}')
     print_from_db_menu(table)
     update_item = input(f'Please enter the ID for the {what} you want to update the {val} for...\n \nPlease press 0 if you wish to return to the previous menu...')
     if update_item == "0":
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
     else:
-        update_item_write_to_db(connection, what, val, table, update_item)
+        update_item_write_to_db( what, val, table, update_item)
         app_header(f"{what} Screen")
-        menu(connection, what, val, table)
+        menu(what, val, table)
 
 
 # GENERIC RETURN OPTION FUNCTIONS 
@@ -209,7 +217,7 @@ def return_option(connection, what, val, table):
         
         if rtn_input.upper() == "Y" or rtn_input.upper() == "YES":
             app_header(what+" Screen")
-            menu(connection, what, val, table)
+            menu(what, val, table)
             
         elif rtn_input.upper() == "N" or rtn_input.upper() == "NO":
             exit_app()
@@ -220,14 +228,14 @@ def return_option(connection, what, val, table):
 
 # Reports Return Option
 
-def reports_return_option(connection):
+def reports_return_option():
     print()
     while True:
         rtn_input = input("Would you like to return to the reports screen? Y/N")
         
         if rtn_input.upper() == "Y" or rtn_input.upper() == "YES":
             app_header("Reporting Screen")
-            reporting_menu(connection)
+            reporting_menu()
             
         elif rtn_input.upper() == "N" or rtn_input.upper() == "NO":
             exit_app()
